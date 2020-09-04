@@ -70,6 +70,10 @@ $axure.internal(function($ax) {
         $ax.constants.VECTOR_SHAPE_TYPE, $ax.constants.TEXT_AREA_TYPE, $ax.constants.TEXT_BOX_TYPE, $ax.constants.SNAPSHOT_TYPE
     ];
 
+    $ax.public.fn.IsSelectionButton = function(type) {
+        return type == $ax.constants.RADIO_BUTTON_TYPE || type == $ax.constants.CHECK_BOX_TYPE;
+    };
+    
     $ax.public.fn.SupportsRichText = function() {
         var obj = $obj(this.getElementIds()[0]);
         // Catch root tree nodes as they are not supported.
@@ -1093,7 +1097,6 @@ $axure.internal(function($ax) {
                 if(curr != enabled) {
                     query.prop('checked', enabled);
                     $ax.style.SetWidgetSelected(elementIds[index], enabled, true);
-                    $ax.event.TryFireCheckChanged(elementId, enabled);
                 }
             }
         }
@@ -1298,7 +1301,7 @@ $axure.internal(function($ax) {
         var axObj = $obj(elementId);
         if (!axObj || !axObj.fixedVertical) return { valid: false };
 
-        var win = $(window);
+        var win = ((SAFARI && IOS) || SHARE_APP) ? $('#ios-safari-html') : $(window);
         var windowWidth = win.width();
         var windowHeight = win.height();
         //getting the scroll forces layout. consider caching these values.
@@ -1360,6 +1363,19 @@ $axure.internal(function($ax) {
             style = $ax.style.computeFullStyle(elementId, state, $ax.adaptive.currentViewId);
             position = { left: style.location.x, top: style.location.y };
 
+            var oShadow = style.outerShadow;
+
+            if (oShadow.on) {
+                if (oShadow.offsetX < 0) {
+                    position.left += oShadow.offsetX;
+                    position.left -= oShadow.blurRadius;
+                }
+                if (oShadow.offsetY < 0) {
+                    position.top += oShadow.offsetY;
+                    position.top -= oShadow.blurRadius;
+                }
+            }
+
             var parents = this.getParents(true, '*')[0];
             //if(parents.length > 0) {
             //    var parentId = parents[0];
@@ -1397,6 +1413,18 @@ $axure.internal(function($ax) {
             state = state || $ax.style.generateState(elementId);
             style = style || $ax.style.computeFullStyle(elementId, state, $ax.adaptive.currentViewId);
             size = { width: style.size.width, height: style.size.height };
+
+            var oShadow = style.outerShadow;
+
+            if (oShadow.on) {
+                if (oShadow.offsetX < 0) size.width -= oShadow.offsetX;
+                else size.width += oShadow.offsetX;
+                if (oShadow.offsetY < 0) size.height -= oShadow.offsetY;
+                else size.height += oShadow.offsetY;
+
+                size.width += oShadow.blurRadius;
+                size.height += oShadow.blurRadius;
+            }
         } else {
             if(!trap) trap = _displayWidget($ax.repeater.removeSuffixFromElementId(elementId));
             var jObj = $(element);

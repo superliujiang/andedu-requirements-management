@@ -37,7 +37,7 @@ var openPreviousPage = $axure.player.openPreviousPage = function () {
         });
 
         $(window.document).bind('keyup', function (e) {
-            if (e.target.localName == "textarea" || e.target.localName == "input") return;
+            if (e.target.localName == "textarea" || e.target.localName == "input" || event.target.isContentEditable) return;
             switch(e.which) {
                 case 188:
                     openPreviousPage();
